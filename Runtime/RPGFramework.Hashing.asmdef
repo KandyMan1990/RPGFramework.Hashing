@@ -1,0 +1,14 @@
+{
+    "name": "RPGFramework.Hashing",
+    "rootNamespace": "RPGFramework.Hashing",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
