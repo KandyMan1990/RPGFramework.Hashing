@@ -1,37 +1,97 @@
+using System;
+using System.Buffers;
 using System.Text;
 
 namespace RPGFramework.Hashing
 {
+    /// <summary>
+    /// FNV-1a 64-bit hashing, mostly used in the localisation package.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Strings are hashed as UTF-8. A null string or null array denotes an empty sequence and
+    /// hashes identically to an empty one, matching how .NET already defines
+    /// <c>((string)null).AsSpan()</c>. Whitespace is ordinary input.
+    /// Reject null, empty or whitespace keys before hashing if they are invalid for your data.
+    /// </para>
+    /// <para>
+    /// Invalid UTF-16 in the input (an unpaired surrogate) is encoded as the Unicode replacement
+    /// character rather than throwing, so two differently-malformed strings can hash alike.
+    /// </para>
+    /// </remarks>
     public static class Fnv1a64
     {
-        private const ulong FNV_OFFSET_BASIS = 14695981039346656037UL;
-        private const ulong FNV_PRIME        = 1099511628211UL;
+        private const ulong FNV_OFFSET_BASIS  = 14695981039346656037UL;
+        private const ulong FNV_PRIME         = 1099511628211UL;
+        private const int   STACK_BUFFER_SIZE = 256;
 
+        private static readonly Encoding m_Utf8 = new UTF8Encoding(false, false);
+
+        /// <summary>
+        /// Computes an FNV-1a 64-bit hash over the UTF-8 representation of a string.
+        /// A null string is treated as empty.
+        /// </summary>
         public static ulong Hash(string input)
         {
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                return 0;
-            }
-
-            byte[] bytes = Encoding.UTF8.GetBytes(input);
-
-            return Hash(bytes);
+            return Hash(input.AsSpan());
         }
 
-        public static ulong Hash(byte[] bytes)
+        /// <summary>
+        /// Computes an FNV-1a 64-bit hash over the UTF-8 representation of characters.
+        /// This overload avoids allocating a UTF-8 byte array for short input and uses a pooled
+        /// buffer for larger input.
+        /// </summary>
+        public static ulong Hash(ReadOnlySpan<char> input)
         {
-            if (bytes == null)
+            int byteCount = m_Utf8.GetByteCount(input);
+
+            if (byteCount <= STACK_BUFFER_SIZE)
             {
-                return 0;
+                Span<byte> buffer  = stackalloc byte[STACK_BUFFER_SIZE];
+                int        written = m_Utf8.GetBytes(input, buffer);
+
+                return Hash(buffer[..written]);
             }
 
+            byte[] rented = ArrayPool<byte>.Shared.Rent(byteCount);
+            try
+            {
+                int written = m_Utf8.GetBytes(input, rented.AsSpan(0, byteCount));
+
+                return Hash(rented.AsSpan(0, written));
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(rented);
+            }
+        }
+
+        /// <summary>
+        /// Computes an FNV-1a 64-bit hash over bytes. A null array is treated as empty.
+        /// </summary>
+        public static ulong Hash(byte[] bytes)
+        {
+            return Hash(bytes.AsSpan());
+        }
+
+        /// <summary>
+        /// Computes an FNV-1a 64-bit hash over bytes without allocating.
+        /// An empty span returns the FNV-1a offset basis.
+        /// </summary>
+        public static ulong Hash(ReadOnlySpan<byte> bytes)
+        {
             ulong hash = FNV_OFFSET_BASIS;
 
-            for (int i = 0; i < bytes.Length; i++)
+            // The wraparound below is the algorithm, not an oversight. C# is unchecked by default,
+            // so this block is intent rather than necessity, and keeps the multiply correct if the
+            // file is ever compiled in a checked context.
+            unchecked
             {
-                hash ^= bytes[i];
-                hash *= FNV_PRIME;
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    hash ^= bytes[i];
+                    hash *= FNV_PRIME;
+                }
             }
 
             return hash;
