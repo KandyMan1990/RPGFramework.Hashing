@@ -21,9 +21,14 @@ namespace RPGFramework.Hashing
     /// </remarks>
     public static class Fnv1a64
     {
-        private const ulong FNV_OFFSET_BASIS  = 14695981039346656037UL;
-        private const ulong FNV_PRIME         = 1099511628211UL;
-        private const int   STACK_BUFFER_SIZE = 256;
+        private const ulong FNV_OFFSET_BASIS = 14695981039346656037UL;
+        private const ulong FNV_PRIME        = 1099511628211UL;
+
+        // Input up to this many characters is encoded on the stack; anything longer uses a pooled
+        // buffer. UTF-8 needs at most three bytes per UTF-16 char, so a buffer three times the
+        // character limit can never overflow.
+        private const int STACK_BUFFER_MAX_CHARS = 85;
+        private const int STACK_BUFFER_SIZE      = STACK_BUFFER_MAX_CHARS * 3;
 
         private static readonly Encoding m_Utf8 = new UTF8Encoding(false, false);
 
@@ -38,14 +43,11 @@ namespace RPGFramework.Hashing
 
         /// <summary>
         /// Computes an FNV-1a 64-bit hash over the UTF-8 representation of characters.
-        /// This overload avoids allocating a UTF-8 byte array for short input and uses a pooled
-        /// buffer for larger input.
+        /// This overload avoids allocation for short input and uses a pooled buffer for larger input.
         /// </summary>
         public static ulong Hash(ReadOnlySpan<char> input)
         {
-            int byteCount = m_Utf8.GetByteCount(input);
-
-            if (byteCount <= STACK_BUFFER_SIZE)
+            if (input.Length <= STACK_BUFFER_MAX_CHARS)
             {
                 Span<byte> buffer  = stackalloc byte[STACK_BUFFER_SIZE];
                 int        written = m_Utf8.GetBytes(input, buffer);
@@ -53,7 +55,8 @@ namespace RPGFramework.Hashing
                 return Hash(buffer[..written]);
             }
 
-            byte[] rented = ArrayPool<byte>.Shared.Rent(byteCount);
+            int    byteCount = m_Utf8.GetByteCount(input);
+            byte[] rented    = ArrayPool<byte>.Shared.Rent(byteCount);
             try
             {
                 int written = m_Utf8.GetBytes(input, rented.AsSpan(0, byteCount));
