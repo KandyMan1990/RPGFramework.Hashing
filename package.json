@@ -1,6 +1,6 @@
 {
   "name": "com.rpgframework.hashing",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "displayName": "RPG Framework Hashing",
   "description": "Fnv1a64 hashing for the RPG Framework",
   "dependencies": {},
