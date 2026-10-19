@@ -5,7 +5,8 @@ using System.Text;
 namespace RPGFramework.Hashing
 {
     /// <summary>
-    /// FNV-1a 64-bit hashing, mostly used in the localisation package.
+    /// FNV-1a 64-bit hashing of text and bytes: how the framework names things by id — save and settings sections,
+    /// localisation keys, and the songs, sounds, fields and transitions content refers to by name.
     /// </summary>
     /// <remarks>
     /// <para>
