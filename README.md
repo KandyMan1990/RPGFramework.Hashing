@@ -17,7 +17,9 @@ Install through the Package Manager from the repository's latest release tag.
 
 ## Usage
 
-`Fnv1a64.Hash` has four overloads: a string, a span of characters, a byte array and a span of bytes.
+`Fnv1a64.Hash` has four overloads: a string, a span of characters, a byte array and a span of bytes. It is FNV-1a
+64 alone, with no other algorithm or width, and each call hashes one input from the offset basis, with no seed and
+no chaining.
 
 ```csharp
 using System;
@@ -43,7 +45,7 @@ ulong  data  = Fnv1a64.Hash(bytes);
 - **No value is reserved**: empty input returns the FNV-1a offset basis, and neither that nor `0` can mean "absent".
   Reject null, empty or whitespace keys before hashing if they are not valid for your data.
 - **Text is not normalised**: an accented letter written as one character and as a letter and a combining accent hash
-  differently, as do different cases.
+  differently, as do different cases. Normalise text first if two spellings of a name must match.
 - **Short text allocates nothing**: up to 85 characters are encoded on the stack, longer text in a pooled buffer.
 
 ### Hashes are stored
@@ -64,19 +66,6 @@ testable: add it to `testables` in `Packages/manifest.json`,
 ]
 ```
 
-then open **Window › General › Test Runner** and run the **EditMode** tests.
-
----
-
-## In this version
-
-**2.0.2** adds the tests: the algorithm's published test vectors, text against its UTF-8 bytes, null and whitespace, an
-unpaired surrogate, and both sides of the 85-character limit. The API and every hash value are unchanged.
-
----
-
-## Not in this version
-
-- **Seeded or chained hashing**: one was added and removed again, as nothing needed it.
-- **Other algorithms or widths**: FNV-1a 64 only.
-- **Normalisation**: text is hashed as given; normalise it first if two spellings of a name must match.
+then open **Window › General › Test Runner** and run the **EditMode** tests. They check the algorithm's published test
+vectors, text against its UTF-8 bytes, null and whitespace, an unpaired surrogate, and both sides of the 85-character
+limit.
