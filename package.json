@@ -4,7 +4,7 @@
   "displayName": "RPG Framework Hashing",
   "description": "Fnv1a64 hashing for the RPG Framework",
   "dependencies": {},
-  "unity": "6000.0",
+  "unity": "6000.7",
   "keywords": [
     "RPG Framework",
     "Hashing",

@@ -31,8 +31,6 @@ namespace RPGFramework.Hashing
         private const int STACK_BUFFER_MAX_CHARS = 85;
         private const int STACK_BUFFER_SIZE      = STACK_BUFFER_MAX_CHARS * 3;
 
-        private static readonly Encoding m_Utf8 = new UTF8Encoding(false, false);
-
         /// <summary>
         /// Computes an FNV-1a 64-bit hash over the UTF-8 representation of a string.
         /// A null string is treated as empty.
@@ -51,16 +49,16 @@ namespace RPGFramework.Hashing
             if (input.Length <= STACK_BUFFER_MAX_CHARS)
             {
                 Span<byte> buffer  = stackalloc byte[STACK_BUFFER_SIZE];
-                int        written = m_Utf8.GetBytes(input, buffer);
+                int        written = Encoding.UTF8.GetBytes(input, buffer);
 
                 return Hash(buffer[..written]);
             }
 
-            int    byteCount = m_Utf8.GetByteCount(input);
+            int    byteCount = Encoding.UTF8.GetByteCount(input);
             byte[] rented    = ArrayPool<byte>.Shared.Rent(byteCount);
             try
             {
-                int written = m_Utf8.GetBytes(input, rented.AsSpan(0, byteCount));
+                int written = Encoding.UTF8.GetBytes(input, rented.AsSpan(0, byteCount));
 
                 return Hash(rented.AsSpan(0, written));
             }

@@ -4,7 +4,7 @@ FNV-1a 64-bit hashing of text and bytes, small and allocation-conscious. The RPG
 hashes — save and settings sections, localisation keys, and the songs, sounds, fields and transitions content refers to
 by name — so a name hashes to the same value on every platform and in every build.
 
-Requires Unity 6000.0 or newer, and depends on nothing else. The runtime assembly has no engine references: it is plain
+Requires Unity 6000.7 or newer, and depends on nothing else. The runtime assembly has no engine references: it is plain
 C#.
 
 ---
